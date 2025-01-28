@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jpeccia/quantogasto_app_server/auth"
 	"github.com/jpeccia/quantogasto_app_server/database"
 	"github.com/jpeccia/quantogasto_app_server/models"
 )
@@ -78,7 +79,6 @@ func AdicionarGastoFixo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Gasto fixo adicionado com sucesso!"})
 }
 
-
 // AdicionarGastoVariavel adiciona um gasto variável do usuário
 func AdicionarGastoVariavel(c *gin.Context) {
 	usuarioID := c.GetInt("usuario_id") // Obtém o ID do usuário do contexto
@@ -121,48 +121,47 @@ func AdicionarGastoVariavel(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Gasto variável adicionado com sucesso!"})
 }
 
-
 // ObterResumo retorna um resumo financeiro do usuário
 func ObterResumo(c *gin.Context) {
-    usuarioID := c.GetInt("usuario_id") // Obtém o ID do usuário do contexto
+	usuarioID := c.GetInt("usuario_id") // Obtém o ID do usuário do contexto
 
-    // Obtém a renda total do usuário
-    var rendaTotal float64
-    queryRenda := `SELECT COALESCE(SUM(valor), 0) FROM rendas WHERE usuario_id = $1`
-    err := database.DB.QueryRow(context.Background(), queryRenda, usuarioID).Scan(&rendaTotal)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar renda"})
-        return
-    }
+	// Obtém a renda total do usuário
+	var rendaTotal float64
+	queryRenda := `SELECT COALESCE(SUM(valor), 0) FROM rendas WHERE usuario_id = $1`
+	err := database.DB.QueryRow(context.Background(), queryRenda, usuarioID).Scan(&rendaTotal)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar renda"})
+		return
+	}
 
-    // Obtém o total de gastos fixos do usuário
-    var gastosFixosTotal float64
-    queryGastosFixos := `SELECT COALESCE(SUM(valor), 0) FROM gastos_fixos WHERE usuario_id = $1`
-    err = database.DB.QueryRow(context.Background(), queryGastosFixos, usuarioID).Scan(&gastosFixosTotal)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar gastos fixos"})
-        return
-    }
+	// Obtém o total de gastos fixos do usuário
+	var gastosFixosTotal float64
+	queryGastosFixos := `SELECT COALESCE(SUM(valor), 0) FROM gastos_fixos WHERE usuario_id = $1`
+	err = database.DB.QueryRow(context.Background(), queryGastosFixos, usuarioID).Scan(&gastosFixosTotal)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar gastos fixos"})
+		return
+	}
 
-    // Obtém o total de gastos variáveis do usuário
-    var gastosVariaveisTotal float64
-    queryGastosVariaveis := `SELECT COALESCE(SUM(valor), 0) FROM gastos_variaveis WHERE usuario_id = $1`
-    err = database.DB.QueryRow(context.Background(), queryGastosVariaveis, usuarioID).Scan(&gastosVariaveisTotal)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar gastos variáveis"})
-        return
-    }
+	// Obtém o total de gastos variáveis do usuário
+	var gastosVariaveisTotal float64
+	queryGastosVariaveis := `SELECT COALESCE(SUM(valor), 0) FROM gastos_variaveis WHERE usuario_id = $1`
+	err = database.DB.QueryRow(context.Background(), queryGastosVariaveis, usuarioID).Scan(&gastosVariaveisTotal)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar gastos variáveis"})
+		return
+	}
 
-    // Calcula o saldo disponível
-    saldo := rendaTotal - gastosFixosTotal - gastosVariaveisTotal
+	// Calcula o saldo disponível
+	saldo := rendaTotal - gastosFixosTotal - gastosVariaveisTotal
 
-    // Retorna o resumo
-    c.JSON(http.StatusOK, gin.H{
-        "renda_total":           rendaTotal,
-        "gastos_fixos_total":    gastosFixosTotal,
-        "gastos_variaveis_total": gastosVariaveisTotal,
-        "saldo_disponivel":      saldo,
-    })
+	// Retorna o resumo
+	c.JSON(http.StatusOK, gin.H{
+		"renda_total":            rendaTotal,
+		"gastos_fixos_total":     gastosFixosTotal,
+		"gastos_variaveis_total": gastosVariaveisTotal,
+		"saldo_disponivel":       saldo,
+	})
 }
 
 // EditarGastoFixo atualiza um gasto fixo do usuário
@@ -333,10 +332,18 @@ func RegistrarUsuario(c *gin.Context) {
         return
     }
 
-    // Retorna o ID do usuário criado
+    // Gera o token JWT
+    token, err := auth.GerarToken(id)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar token"})
+        return
+    }
+
+    // Retorna o token e o ID do usuário
     c.JSON(http.StatusOK, gin.H{
         "message": "Usuário registrado com sucesso!",
         "id":      id,
+        "token":   token,
     })
 }
 
@@ -400,20 +407,19 @@ func AtualizarUsuario(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Dados do usuário atualizados com sucesso!"})
 }
 
-
 // Obter Usuario retorna os dados do usuário
 func ObterUsuario(c *gin.Context) {
-    id := c.Param("id") // Obtém o ID do usuário da URL
+	id := c.Param("id") // Obtém o ID do usuário da URL
 
-    var usuario models.Usuario
-    query := `SELECT id, nome, foto_perfil, cargo, renda, created_at FROM usuarios WHERE id = $1`
-    err := database.DB.QueryRow(context.Background(), query, id).Scan(
-        &usuario.ID, &usuario.Nome, &usuario.FotoPerfil, &usuario.Cargo, &usuario.Renda, &usuario.CreatedAt,
-    )
-    if err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
-        return
-    }
+	var usuario models.Usuario
+	query := `SELECT id, nome, foto_perfil, cargo, renda, created_at FROM usuarios WHERE id = $1`
+	err := database.DB.QueryRow(context.Background(), query, id).Scan(
+		&usuario.ID, &usuario.Nome, &usuario.FotoPerfil, &usuario.Cargo, &usuario.Renda, &usuario.CreatedAt,
+	)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
+		return
+	}
 
-    c.JSON(http.StatusOK, usuario)
+	c.JSON(http.StatusOK, usuario)
 }

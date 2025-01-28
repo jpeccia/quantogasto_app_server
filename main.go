@@ -46,14 +46,14 @@ func main() {
 	auth := r.Group("/")
 	auth.Use(middleware.Autenticar()) // Middleware de autenticação aplicado
 	{
-		auth.PUT("/gastos-fixos/:id", handlers.EditarGastoFixo)       // Edita um gasto fixo
-		auth.PUT("/gastos-variaveis/:id", handlers.EditarGastoVariavel) // Edita um gasto variável
-		auth.DELETE("/gastos-fixos/:id", handlers.RemoverGastoFixo)     // Remove um gasto fixo
+		auth.PUT("/gastos-fixos/:id", handlers.EditarGastoFixo)             // Edita um gasto fixo
+		auth.PUT("/gastos-variaveis/:id", handlers.EditarGastoVariavel)     // Edita um gasto variável
+		auth.DELETE("/gastos-fixos/:id", handlers.RemoverGastoFixo)         // Remove um gasto fixo
 		auth.DELETE("/gastos-variaveis/:id", handlers.RemoverGastoVariavel) // Remove um gasto variável
-		auth.POST("/renda", handlers.AdicionarRenda)
-		auth.POST("/gastos-fixos", handlers.AdicionarGastoFixo)
-		auth.POST("/gastos-variaveis", handlers.AdicionarGastoVariavel)
-		auth.GET("/resumo", handlers.ObterResumo)
+		auth.POST("/renda", handlers.AdicionarRenda)                        // Adiciona renda
+		auth.POST("/gastos-fixos", handlers.AdicionarGastoFixo)             // Adiciona gasto fixo
+		auth.POST("/gastos-variaveis", handlers.AdicionarGastoVariavel)     // Adiciona gasto variável
+		auth.GET("/resumo", handlers.ObterResumo)                           // Obtém resumo financeiro
 	}
 
 	// Inicia o servidor
