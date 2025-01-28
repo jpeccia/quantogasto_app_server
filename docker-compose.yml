@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15 # Versão do PostgreSQL
+    container_name: quantogasto_app
+    env_file: .env # Carrega as variáveis de ambiente do arquivo .env
+    environment:
+      POSTGRES_USER: ${DB_USER} # Referencia a variável do .env
+      POSTGRES_PASSWORD: ${DB_PASSWORD} # Referencia a variável do .env
+      POSTGRES_DB: ${DB_NAME} # Referencia a variável do .env
+    ports:
+      - "${DB_PORT}:5432" # Mapeia a porta do .env para a porta do contêiner
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persiste os dados do banco em um volume
+
+volumes:
+  postgres_data: # Define um volume para persistir os dados do PostgreSQL
