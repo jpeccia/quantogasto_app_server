@@ -22,6 +22,8 @@ func main() {
 	
 	r := gin.Default()
 
+	r.POST("/usuarios", handlers.RegistrarUsuario)       // Cadastra um novo usuário
+    r.GET("/usuarios/:id", handlers.ObterUsuario)       // Obtém dados de um usuário
 	r.POST("/renda", handlers.AdicionarRenda)
 	r.POST("/gastos-fixos", handlers.AdicionarGastoFixo)
 	r.POST("/gastos-variaveis", handlers.AdicionarGastoVariavel)

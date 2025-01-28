@@ -125,3 +125,50 @@ func ObterResumo(c *gin.Context) {
         "saldo_disponivel":      saldo,
     })
 }
+
+func RegistrarUsuario(c *gin.Context) {
+    var usuario models.Usuario
+
+    // Bind do JSON recebido para a struct Usuario
+    if err := c.ShouldBindJSON(&usuario); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Insere o usuário no banco de dados
+    query := `
+        INSERT INTO usuarios (nome, foto_perfil, cargo, renda)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id
+    `
+    var id int
+    err := database.DB.QueryRow(context.Background(), query,
+        usuario.Nome, usuario.FotoPerfil, usuario.Cargo, usuario.Renda,
+    ).Scan(&id)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao registrar usuário"})
+        return
+    }
+
+    // Retorna o ID do usuário criado
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Usuário registrado com sucesso!",
+        "id":      id,
+    })
+}
+
+func ObterUsuario(c *gin.Context) {
+    id := c.Param("id") // Obtém o ID do usuário da URL
+
+    var usuario models.Usuario
+    query := `SELECT id, nome, foto_perfil, cargo, renda, created_at FROM usuarios WHERE id = $1`
+    err := database.DB.QueryRow(context.Background(), query, id).Scan(
+        &usuario.ID, &usuario.Nome, &usuario.FotoPerfil, &usuario.Cargo, &usuario.Renda, &usuario.CreatedAt,
+    )
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
+        return
+    }
+
+    c.JSON(http.StatusOK, usuario)
+}
