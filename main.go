@@ -1,6 +1,9 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/jpeccia/quantogasto_app_server/handlers"
+)
 
 func main() {
 	r := gin.Default()
