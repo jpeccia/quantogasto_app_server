@@ -6,6 +6,8 @@ services:
     container_name: quantogasto_app
     env_file: .env # Carrega as variáveis de ambiente do arquivo .env
     environment:
+      SECRETKEY: ${SECRETKEY}
+      DB_URL: ${DB_URL}
       POSTGRES_USER: ${DB_USER} # Referencia a variável do .env
       POSTGRES_PASSWORD: ${DB_PASSWORD} # Referencia a variável do .env
       POSTGRES_DB: ${DB_NAME} # Referencia a variável do .env

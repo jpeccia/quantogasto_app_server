@@ -8,7 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/jpeccia/quantogasto_app_server/database"
 	"github.com/jpeccia/quantogasto_app_server/handlers"
-	"github.com/jpeccia/quantogasto_app_server/middlewares" // Importa o middleware de autenticação
+	middleware "github.com/jpeccia/quantogasto_app_server/middlewares"
 )
 
 func main() {
