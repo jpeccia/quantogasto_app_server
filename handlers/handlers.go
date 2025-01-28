@@ -308,7 +308,6 @@ func RemoverGastoVariavel(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Gasto variável removido com sucesso!"})
 }
 
-
 // Registrar Usuário registra o Nome do usuário
 func RegistrarUsuario(c *gin.Context) {
     var usuario models.Usuario
@@ -340,6 +339,67 @@ func RegistrarUsuario(c *gin.Context) {
         "id":      id,
     })
 }
+
+func AtualizarUsuario(c *gin.Context) {
+	usuarioID := c.GetInt("usuario_id") // Obtém o ID do usuário do contexto
+
+	// Estrutura para os dados de entrada
+	var input struct {
+		Cargo      *string  `json:"cargo"`       // Campo opcional
+		Renda      *float64 `json:"renda"`       // Campo opcional
+		FotoPerfil *string  `json:"foto_perfil"` // Campo opcional
+	}
+
+	// Valida a entrada
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Construção dinâmica da query de atualização
+	query := `UPDATE usuarios SET`
+	params := []interface{}{}
+	paramIndex := 1
+
+	if input.Cargo != nil {
+		query += ` cargo = $` + string(rune(paramIndex)) + `,`
+		params = append(params, *input.Cargo)
+		paramIndex++
+	}
+
+	if input.Renda != nil {
+		query += ` renda = $` + string(rune(paramIndex)) + `,`
+		params = append(params, *input.Renda)
+		paramIndex++
+	}
+
+	if input.FotoPerfil != nil {
+		query += ` foto_perfil = $` + string(rune(paramIndex)) + `,`
+		params = append(params, *input.FotoPerfil)
+		paramIndex++
+	}
+
+	// Remove a vírgula final e adiciona a cláusula WHERE
+	query = query[:len(query)-1] + ` WHERE id = $` + string(rune(paramIndex))
+	params = append(params, usuarioID)
+
+	// Executa a query de atualização
+	result, err := database.DB.Exec(context.Background(), query, params...)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao atualizar os dados do usuário"})
+		return
+	}
+
+	// Verifica se alguma linha foi afetada
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Dados do usuário atualizados com sucesso!"})
+}
+
 
 // Obter Usuario retorna os dados do usuário
 func ObterUsuario(c *gin.Context) {
