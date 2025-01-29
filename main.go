@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/jpeccia/quantogasto_app_server/database"
@@ -28,8 +29,16 @@ func main() {
 		log.Fatal("Erro ao conectar ao banco de dados: ", err)
 	}
 
-	// Inicializa o roteador
+	// Inicializa o roteador do Gin
 	r := gin.Default()
+
+	// Configura o middleware CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:8081"},         // URL do seu app Expo
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},  // Métodos permitidos
+		AllowHeaders:     []string{"Content-Type", "Authorization"}, // Cabeçalhos permitidos
+		AllowCredentials: true,                                      // Se você estiver utilizando cookies ou autenticação
+	}))
 
 	// Middleware global (opcional)
 	r.Use(gin.Logger())   // Log de todas as requisições
@@ -38,7 +47,7 @@ func main() {
 	// Rotas de usuários
 	usuarios := r.Group("/usuarios")
 	{
-		usuarios.POST("/", handlers.RegistrarUsuario) // Cadastra um novo usuário
+		usuarios.POST("", handlers.RegistrarUsuario) // Cadastra um novo usuário
 	}
 
 	// Rotas protegidas por autenticação
@@ -49,12 +58,12 @@ func main() {
 		auth.PUT("/gastos-variaveis/:id", handlers.EditarGastoVariavel)     // Edita um gasto variável
 		auth.DELETE("/gastos-fixos/:id", handlers.RemoverGastoFixo)         // Remove um gasto fixo
 		auth.DELETE("/gastos-variaveis/:id", handlers.RemoverGastoVariavel) // Remove um gasto variável
-		auth.POST("/renda", handlers.AdicionarRenda)                        // Adiciona renda
+		auth.PUT("/renda", handlers.AdicionarRenda)                         // Adiciona renda
 		auth.POST("/gastos-fixos", handlers.AdicionarGastoFixo)             // Adiciona gasto fixo
 		auth.POST("/gastos-variaveis", handlers.AdicionarGastoVariavel)     // Adiciona gasto variável
-		auth.POST("/usuarios/foto", handlers.UploadFotoPerfil) // Rota para upload de foto de perfil
+		auth.POST("/usuarios/foto", handlers.UploadFotoPerfil)              // Rota para upload de foto de perfil
 		auth.GET("/resumo", handlers.ObterResumo)                           // Obtém resumo financeiro
-		auth.GET("/:id", handlers.ObterUsuario)   // Obtém dados de um usuário
+		auth.GET("/usuarios/:id", handlers.ObterUsuario)                    // Obtém dados de um usuário
 	}
 
 	// Inicia o servidor

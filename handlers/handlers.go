@@ -438,34 +438,34 @@ func ObterUsuario(c *gin.Context) {
 }
 
 func UploadFotoPerfil(c *gin.Context) {
-    usuarioID := c.GetInt("usuario_id") // Obtém o ID do usuário do contexto
+	usuarioID := c.GetInt("usuario_id") // Obtém o ID do usuário do contexto
 
-    // Recebe o arquivo enviado no campo "foto"
-    file, err := c.FormFile("foto")
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Nenhum arquivo enviado"})
-        return
-    }
+	// Recebe o arquivo enviado no campo "foto"
+	file, err := c.FormFile("foto")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nenhum arquivo enviado"})
+		return
+	}
 
-    // Define o caminho onde a imagem será salva
-    filePath := "uploads/" + file.Filename
+	// Define o caminho onde a imagem será salva
+	filePath := "uploads/" + file.Filename
 
-    // Salva o arquivo no servidor
-    if err := c.SaveUploadedFile(file, filePath); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao salvar o arquivo"})
-        return
-    }
+	// Salva o arquivo no servidor
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao salvar o arquivo"})
+		return
+	}
 
-    // Atualiza o caminho da foto no banco de dados
-    query := `UPDATE usuarios SET foto_perfil = $1 WHERE id = $2`
-    _, err = database.DB.Exec(context.Background(), query, filePath, usuarioID)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao atualizar a foto de perfil"})
-        return
-    }
+	// Atualiza o caminho da foto no banco de dados
+	query := `UPDATE usuarios SET foto_perfil = $1 WHERE id = $2`
+	_, err = database.DB.Exec(context.Background(), query, filePath, usuarioID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao atualizar a foto de perfil"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{
-        "message":    "Foto de perfil atualizada com sucesso!",
-        "foto_perfil": filePath,
-    })
+	c.JSON(http.StatusOK, gin.H{
+		"message":     "Foto de perfil atualizada com sucesso!",
+		"foto_perfil": filePath,
+	})
 }
