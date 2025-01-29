@@ -39,7 +39,6 @@ func main() {
 	usuarios := r.Group("/usuarios")
 	{
 		usuarios.POST("/", handlers.RegistrarUsuario) // Cadastra um novo usuário
-		usuarios.GET("/:id", handlers.ObterUsuario)   // Obtém dados de um usuário
 	}
 
 	// Rotas protegidas por autenticação
@@ -53,7 +52,9 @@ func main() {
 		auth.POST("/renda", handlers.AdicionarRenda)                        // Adiciona renda
 		auth.POST("/gastos-fixos", handlers.AdicionarGastoFixo)             // Adiciona gasto fixo
 		auth.POST("/gastos-variaveis", handlers.AdicionarGastoVariavel)     // Adiciona gasto variável
+		auth.POST("/usuarios/foto", handlers.UploadFotoPerfil) // Rota para upload de foto de perfil
 		auth.GET("/resumo", handlers.ObterResumo)                           // Obtém resumo financeiro
+		auth.GET("/:id", handlers.ObterUsuario)   // Obtém dados de um usuário
 	}
 
 	// Inicia o servidor
