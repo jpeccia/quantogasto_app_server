@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jpeccia/quantogasto_app_server/auth"
@@ -16,6 +17,16 @@ func Autenticar() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		// Verifica se o token começa com o prefixo "Bearer "
+		if !strings.HasPrefix(tokenString, "Bearer ") {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Formato do token inválido. O token deve ser precedido de 'Bearer '"})
+			c.Abort()
+			return
+		}
+
+		// Remove o prefixo "Bearer " do token
+		tokenString = tokenString[7:] // Remove "Bearer " (7 caracteres)
 
 		// Valida o token
 		claims, err := auth.ValidarToken(tokenString)
